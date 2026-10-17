@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#020818">
+<title>لوحة المالك — مصطفي عاشور</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+<div class="loader-screen" id="loader"><div class="spinner"></div><div id="loaderMsg">جاري تحميل البيانات...</div></div>
+
+<div class="shell">
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="brand-badge">
+      <div class="brand-icon">✂️</div>
+      <div class="brand-text"><h2 id="sbShopName">مصطفي عاشور</h2><p>لوحة المالك</p></div>
+    </div>
+  </div>
+  <div class="sb-label">الرئيسية</div>
+  <div class="nav" data-p="overview" onclick="go('overview')"><div class="nav-icon">📊</div>نظرة عامة</div>
+  <div class="nav" data-p="reports" onclick="go('reports')"><div class="nav-icon">💰</div>التقارير والإيرادات</div>
+  <div class="nav" data-p="invoices" onclick="go('invoices')"><div class="nav-icon">🧾</div>الفواتير</div>
+  <div class="nav" data-p="appointments" onclick="go('appointments')"><div class="nav-icon">📅</div>المواعيد <span class="badge hidden" id="apptBadge"></span></div>
+  <div class="sb-label">الإدارة</div>
+  <div class="nav" data-p="customers" onclick="go('customers')"><div class="nav-icon">👥</div>العملاء</div>
+  <div class="nav" data-p="services" onclick="go('services')"><div class="nav-icon">💈</div>الخدمات والأسعار</div>
+  <div class="nav" data-p="barbers" onclick="go('barbers')"><div class="nav-icon">💇</div>الحلاقين والرواتب</div>
+  <div class="nav" data-p="expenses" onclick="go('expenses')"><div class="nav-icon">💸</div>المصروفات</div>
+  <div class="sb-label">النظام</div>
+  <div class="nav" data-p="staff" onclick="go('staff')"><div class="nav-icon">🔐</div>المستخدمين</div>
+  <div class="nav" data-p="settings" onclick="go('settings')"><div class="nav-icon">⚙️</div>الإعدادات</div>
+  <div class="sb-bottom">
+    <div class="user-card"><div class="user-avatar">👤</div><div><h4 id="meName">المالك</h4><p id="meEmail">—</p></div></div>
+    <a class="btn btn-sm btn-block" href="cashier.html" target="_blank">🏧 فتح الكاشير</a>
+    <button class="btn btn-sm btn-block btn-danger" onclick="logout()">🚪 تسجيل الخروج</button>
+  </div>
+</aside>
+<div class="sb-backdrop" id="sbBackdrop" onclick="toggleSidebar(false)"></div>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <button class="menu-btn" onclick="toggleSidebar(true)">☰</button>
+      <div><h1 id="pageTitle">نظرة عامة</h1><p id="pageSub">—</p></div>
+    </div>
+    <div class="date-chip">📅 <span id="todayLabel">—</span></div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <section class="page" id="pg-overview">
+    <div class="kpi-grid" id="ovKpis"></div>
+    <div class="grid g-2-1">
+      <div class="card"><div class="card-title"><span>📈 إيرادات آخر ٧ أيام</span><span class="sub" id="ovWeek"></span></div><div class="vbars" id="ovBars"></div></div>
+      <div class="card"><div class="card-title"><span>📅 مواعيد النهارده</span><button class="btn btn-xs" onclick="go('appointments')">الكل</button></div><div id="ovAppts"></div></div>
+    </div>
+    <div class="grid g-3">
+      <div class="card"><div class="card-title"><span>💈 أكثر الخدمات طلباً</span><span class="sub">الشهر ده</span></div><div id="ovSvcs"></div></div>
+      <div class="card"><div class="card-title"><span>✂️ أداء الحلاقين</span><span class="sub">الشهر ده</span></div><div id="ovBarbers"></div></div>
+      <div class="card"><div class="card-title"><span>🏆 أكثر العملاء إنفاقاً</span></div><div id="ovCust"></div></div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="page" id="pg-reports">
+    <div class="card" style="margin-bottom:16px">
+      <div class="toolbar" style="margin-bottom:0">
+        <div class="seg" id="rQuick">
+          <button data-r="today" onclick="setRange('today')">النهارده</button>
+          <button data-r="yesterday" onclick="setRange('yesterday')">امبارح</button>
+          <button data-r="week" onclick="setRange('week')">آخر ٧ أيام</button>
+          <button data-r="month" onclick="setRange('month')">الشهر ده</button>
+          <button data-r="lastMonth" onclick="setRange('lastMonth')">الشهر اللي فات</button>
+          <button data-r="year" onclick="setRange('year')">السنة دي</button>
+        </div>
+        <div class="grp">
+          <label>من</label><input type="date" class="input input-sm" id="rFrom" onchange="customRange()">
+          <label>إلى</label><input type="date" class="input input-sm" id="rTo" onchange="customRange()">
+          <button class="btn btn-sm" onclick="exportReport()">⬇️ Excel</button>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-grid" id="rKpis"></div>
+    <div class="grid g-2">
+      <div class="card"><div class="card-title"><span>✂️ حسب الحلاق</span></div>
+        <div class="table-wrap"><table class="table"><thead><tr><th>الحلاق</th><th>فواتير</th><th>مبيعات</th><th>العمولة</th></tr></thead><tbody id="rBarbers"></tbody></table></div></div>
+      <div class="card"><div class="card-title"><span>💈 حسب الخدمة</span></div>
+        <div class="table-wrap"><table class="table"><thead><tr><th>الخدمة</th><th>العدد</th><th>الإيراد</th></tr></thead><tbody id="rSvcs"></tbody></table></div></div>
+    </div>
+    <div class="grid g-2">
+      <div class="card"><div class="card-title"><span>💳 طرق الدفع</span></div><div id="rPay"></div></div>
+      <div class="card"><div class="card-title"><span>📆 يوم بيوم</span></div>
+        <div class="table-wrap" style="max-height:420px;overflow-y:auto"><table class="table"><thead><tr><th>اليوم</th><th>فواتير</th><th>الإيراد</th><th>المصروفات</th></tr></thead><tbody id="rDays"></tbody></table></div></div>
+    </div>
+  </section>
+
+  <!-- INVOICES -->
+  <section class="page" id="pg-invoices">
+    <div class="card">
+      <div class="toolbar">
+        <div class="grp">
+          <label>من</label><input type="date" class="input input-sm" id="ivFrom" onchange="loadInvoices()">
+          <label>إلى</label><input type="date" class="input input-sm" id="ivTo" onchange="loadInvoices()">
+          <select class="input input-sm" id="ivBarber" onchange="renderInvoicesTable()"></select>
+          <select class="input input-sm" id="ivPay" onchange="renderInvoicesTable()">
+            <option value="">كل طرق الدفع</option><option value="cash">كاش</option><option value="vodafone">فودافون كاش</option><option value="instapay">إنستاباي</option><option value="card">فيزا</option>
+          </select>
+        </div>
+        <div class="grp">
+          <input class="input input-sm search-inp" id="ivSearch" placeholder="🔍 رقم الفاتورة أو اسم العميل..." oninput="renderInvoicesTable()">
+          <button class="btn btn-sm" onclick="exportInvoices()">⬇️ Excel</button>
+        </div>
+      </div>
+      <div class="sub" id="ivSummary" style="margin-bottom:10px"></div>
+      <div class="table-wrap">
+        <table class="table"><thead><tr><th>#</th><th>العميل</th><th>الحلاق</th><th>الخدمات</th><th>الإجمالي</th><th>الدفع</th><th>التاريخ</th><th>الوقت</th><th>إجراءات</th></tr></thead><tbody id="ivBody"></tbody></table>
+      </div>
+      <div class="more-row hidden" id="ivMore"><button class="btn btn-sm" onclick="IV.limit+=200;renderInvoicesTable()">عرض المزيد</button></div>
+    </div>
+  </section>
+
+  <!-- APPOINTMENTS -->
+  <section class="page" id="pg-appointments">
+    <div class="toolbar">
+      <div class="seg" id="apTabs">
+        <button data-f="upcoming" class="active" onclick="setApptFilter('upcoming')">القادمة</button>
+        <button data-f="today" onclick="setApptFilter('today')">النهارده</button>
+        <button data-f="done" onclick="setApptFilter('done')">منتهية</button>
+        <button data-f="cancelled" onclick="setApptFilter('cancelled')">ملغية</button>
+        <button data-f="all" onclick="setApptFilter('all')">الكل</button>
+      </div>
+      <button class="btn btn-primary" onclick="openApptModal()">+ حجز موعد</button>
+    </div>
+    <div class="card"><div class="table-wrap">
+      <table class="table"><thead><tr><th>العميل</th><th>الحلاق</th><th>الخدمة</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="apBody"></tbody></table>
+    </div></div>
+  </section>
+
+  <!-- CUSTOMERS -->
+  <section class="page" id="pg-customers">
+    <div class="card">
+      <div class="toolbar">
+        <div class="grp">
+          <input class="input input-sm search-inp" id="cuSearch" placeholder="🔍 ابحث بالاسم أو التليفون..." oninput="CU.limit=100;renderCustomers()">
+          <select class="input input-sm" id="cuSort" onchange="renderCustomers()">
+            <option value="spent">الأكثر إنفاقاً</option><option value="visits">الأكثر زيارة</option><option value="last">آخر زيارة</option><option value="new">الأحدث تسجيلاً</option><option value="name">الاسم</option>
+          </select>
+        </div>
+        <div class="grp">
+          <span class="sub" id="cuCount"></span>
+          <button class="btn btn-sm" onclick="exportCustomers()">⬇️ Excel</button>
+          <button class="btn btn-sm btn-primary" onclick="openCustModal()">+ إضافة عميل</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="table"><thead><tr><th>الاسم</th><th>التليفون</th><th>الزيارات</th><th>إجمالي الإنفاق</th><th>آخر زيارة</th><th>إجراءات</th></tr></thead><tbody id="cuBody"></tbody></table>
+      </div>
+      <div class="more-row hidden" id="cuMore"><button class="btn btn-sm" onclick="CU.limit+=100;renderCustomers()">عرض المزيد</button></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="page" id="pg-services">
+    <div class="grid g-2-1">
+      <div class="card">
+        <div class="card-title"><span>💈 الخدمات والأسعار</span><button class="btn btn-sm btn-primary" onclick="openSvcModal()">+ إضافة خدمة</button></div>
+        <div class="alert alert-info small">💡 تغيير السعر مش بيأثر على الفواتير القديمة. "إيقاف" الخدمة بيخفيها من الكاشير من غير ما تتمسح.</div>
+        <div class="table-wrap"><table class="table"><thead><tr><th>الخدمة</th><th>السعر</th><th>المدة</th><th>طلبات الشهر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="svBody"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🍩 توزيع الخدمات</span><span class="sub">الشهر ده</span></div>
+        <div class="donut-wrap"><svg width="150" height="150" viewBox="0 0 150 150" id="svDonut"></svg><div class="donut-center"><b id="svDonutNum">0</b><span>طلب</span></div></div>
+        <div class="legend" id="svLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BARBERS -->
+  <section class="page" id="pg-barbers">
+    <div class="toolbar">
+      <div class="grp"><label>الشهر</label><input type="month" class="input input-sm" id="bmMonth" onchange="renderBarbers()"></div>
+      <button class="btn btn-primary" onclick="openBarberModal()">+ إضافة حلاق</button>
+    </div>
+    <div class="alert alert-info small">💡 الصافي = الراتب + العمولة + البونص − السلف − الخصومات (للشهر المختار بس).</div>
+    <div class="barbers-grid" id="bmGrid"></div>
+    <div class="card">
+      <div class="card-title"><span>📋 المعاملات المالية للشهر</span><span class="sub" id="bmTxCount"></span></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>الحلاق</th><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th>التاريخ</th><th></th></tr></thead><tbody id="bmTxBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- EXPENSES -->
+  <section class="page" id="pg-expenses">
+    <div class="toolbar">
+      <div class="grp"><label>الشهر</label><input type="month" class="input input-sm" id="exMonth" onchange="renderExpenses()"></div>
+      <button class="btn btn-primary" onclick="openExpModal()">+ إضافة مصروف</button>
+    </div>
+    <div class="kpi-grid" id="exKpis"></div>
+    <div class="card">
+      <div class="card-title"><span>💸 مصروفات الشهر</span><span class="sub" id="exCats"></span></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>التاريخ</th><th>البند</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- STAFF -->
+  <section class="page" id="pg-staff">
+    <div class="toolbar">
+      <div class="sub">الكاشير بيقدر يعمل فواتير ويضيف عملاء ويحجز مواعيد بس — مش بيشوف لوحة المالك.</div>
+      <button class="btn btn-primary" onclick="openStaffModal()">+ إضافة مستخدم</button>
+    </div>
+    <div class="card"><div class="table-wrap">
+      <table class="table"><thead><tr><th>الاسم</th><th>الإيميل</th><th>الصلاحية</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="stBody"></tbody></table>
+    </div></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="page" id="pg-settings">
+    <div class="settings-grid">
+      <div class="card">
+        <h3>🏪 بيانات المحل (بتظهر في الوصل)</h3>
+        <div class="field"><label class="label">اسم المحل</label><input class="input" id="shName"></div>
+        <div class="row2">
+          <div class="field"><label class="label">التليفون</label><input class="input" id="shPhone" style="direction:ltr;text-align:right"></div>
+          <div class="field"><label class="label">العنوان</label><input class="input" id="shAddress"></div>
+        </div>
+        <div class="field"><label class="label">رسالة آخر الوصل</label><textarea class="input" id="shFooter" rows="2"></textarea></div>
+        <button class="btn btn-primary btn-block" id="shSave" onclick="saveShop()">💾 حفظ</button>
+      </div>
+      <div class="card">
+        <h3>🔑 تغيير الباسورد بتاعي</h3>
+        <div class="kv"><div class="k">الإيميل</div><div class="v ltr" id="setEmail">—</div></div>
+        <div class="field"><label class="label">الباسورد الحالي</label><input class="input" type="password" id="pwOld" style="direction:ltr"></div>
+        <div class="row2">
+          <div class="field"><label class="label">الباسورد الجديد</label><input class="input" type="password" id="pwNew" style="direction:ltr"></div>
+          <div class="field"><label class="label">تأكيد</label><input class="input" type="password" id="pwNew2" style="direction:ltr"></div>
+        </div>
+        <button class="btn btn-primary btn-block" id="pwSave" onclick="changePassword()">🔒 تغيير الباسورد</button>
+      </div>
+      <div class="card">
+        <h3>💾 نسخة احتياطية</h3>
+        <p class="sub" style="margin-bottom:12px">تنزيل كل بيانات المحل (عملاء، فواتير، مواعيد، حلاقين، مصروفات) في ملف واحد على جهازك. يُفضّل تعملها كل أسبوع.</p>
+        <button class="btn btn-block" id="bkBtn" onclick="downloadBackup()">⬇️ تنزيل نسخة احتياطية</button>
+      </div>
+      <div class="card">
+        <h3>🛠️ أدوات</h3>
+        <div class="kv"><div class="k">حالة ترحيل البيانات القديمة</div><div class="v" id="migStatus">—</div></div>
+        <p class="sub" style="margin-bottom:10px">لو لاحظت إن عدد زيارات أو إنفاق عميل مش مظبوط، الزرار ده بيعيد حسابه من الفواتير.</p>
+        <button class="btn btn-block" id="recalcBtn" onclick="recalcCustomers()">🔄 إعادة حساب إحصائيات العملاء</button>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+<datalist id="custList"></datalist>
+
+<!-- MIGRATION -->
+<div class="modal-overlay" id="migModal">
+  <div class="modal">
+    <h2>📦 ترحيل البيانات القديمة</h2>
+    <div class="alert alert-info">لقينا بيانات النظام القديم. هننقلها للنظام الجديد، و<b>النسخة القديمة هتفضل زي ما هي من غير ما تتمسح</b> كنسخة احتياطية.</div>
+    <div class="mig-list" id="migCounts"></div>
+    <div class="alert alert-warn small">⚠️ اعمل الخطوة دي والمحل مقفول أو مفيش حد بيستخدم الكاشير القديم دلوقتي.</div>
+    <div class="sub" id="migProgress" style="margin:8px 0;text-align:center"></div>
+    <div class="modal-actions"><button class="btn btn-primary btn-block" id="migBtn" onclick="runMigration()">🚀 ابدأ الترحيل</button></div>
+  </div>
+</div>
+
+<!-- CUSTOMER -->
+<div class="modal-overlay" id="custModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('custModal')">✕</button>
+    <h2 id="cuModalTitle">إضافة عميل</h2>
+    <input type="hidden" id="cuId">
+    <div class="field"><label class="label">الاسم *</label><input class="input" id="cuName"></div>
+    <div class="field"><label class="label">رقم التليفون</label><input class="input" id="cuPhone" placeholder="01xxxxxxxxx" inputmode="tel" style="direction:ltr;text-align:right"></div>
+    <div class="field"><label class="label">ملاحظات</label><textarea class="input" id="cuNotes" rows="2"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('custModal')">إلغاء</button><button class="btn btn-primary" id="cuSave" onclick="saveCustomer()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- CUSTOMER HISTORY -->
+<div class="modal-overlay" id="histModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('histModal')">✕</button>
+    <h2 id="histTitle">سجل العميل</h2>
+    <div class="kpi-grid" id="histKpis"></div>
+    <div class="table-wrap" style="max-height:50vh;overflow-y:auto"><table class="table"><thead><tr><th>#</th><th>التاريخ</th><th>الخدمات</th><th>الحلاق</th><th>الإجمالي</th><th></th></tr></thead><tbody id="histBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- SERVICE -->
+<div class="modal-overlay" id="svcModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('svcModal')">✕</button>
+    <h2 id="svModalTitle">إضافة خدمة</h2>
+    <input type="hidden" id="svId">
+    <div class="field"><label class="label">اسم الخدمة *</label><input class="input" id="svName"></div>
+    <div class="row3">
+      <div class="field"><label class="label">السعر (ج) *</label><input class="input" type="number" min="0" step="any" id="svPrice"></div>
+      <div class="field"><label class="label">المدة (دقيقة)</label><input class="input" type="number" min="0" id="svDuration" value="30"></div>
+      <div class="field"><label class="label">الترتيب</label><input class="input" type="number" id="svOrder"></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('svcModal')">إلغاء</button><button class="btn btn-primary" id="svSave" onclick="saveService()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- BARBER -->
+<div class="modal-overlay" id="barberModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('barberModal')">✕</button>
+    <h2 id="brModalTitle">إضافة حلاق</h2>
+    <input type="hidden" id="brId">
+    <div class="row2">
+      <div class="field"><label class="label">الاسم *</label><input class="input" id="brName"></div>
+      <div class="field"><label class="label">التليفون</label><input class="input" id="brPhone" inputmode="tel" style="direction:ltr;text-align:right"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label class="label">الراتب الشهري (ج)</label><input class="input" type="number" min="0" id="brSalary" value="0"></div>
+      <div class="field"><label class="label">عمولة على المبيعات %</label><input class="input" type="number" min="0" max="100" step="any" id="brCommission" value="0"></div>
+      <div class="field"><label class="label">تارجت شهري (فواتير)</label><input class="input" type="number" min="0" id="brTarget" value="0"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="brActive" checked> شغال (بيظهر في الكاشير)</label>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('barberModal')">إلغاء</button><button class="btn btn-primary" id="brSave" onclick="saveBarber()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- BARBER TX -->
+<div class="modal-overlay" id="txModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('txModal')">✕</button>
+    <h2 id="txTitle">معاملة مالية</h2>
+    <input type="hidden" id="txBarber">
+    <div class="seg" id="txSeg" style="margin-bottom:14px">
+      <button data-t="advance" onclick="setTxType('advance')">💵 سلفة</button>
+      <button data-t="bonus" onclick="setTxType('bonus')">🎁 بونص</button>
+      <button data-t="deduct" onclick="setTxType('deduct')">✂️ خصم</button>
+    </div>
+    <div class="row2">
+      <div class="field"><label class="label">المبلغ (ج) *</label><input class="input" type="number" min="0" step="any" id="txAmount"></div>
+      <div class="field"><label class="label">التاريخ</label><input class="input" type="date" id="txDate"></div>
+    </div>
+    <div class="field"><label class="label">ملاحظة</label><input class="input" id="txNote" placeholder="سبب أو تفاصيل..."></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('txModal')">إلغاء</button><button class="btn btn-primary" id="txSave" onclick="saveTx()">💾 تسجيل</button></div>
+  </div>
+</div>
+
+<!-- BARBER DETAILS -->
+<div class="modal-overlay" id="bdModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('bdModal')">✕</button>
+    <h2 id="bdTitle">تفاصيل</h2>
+    <div class="toolbar"><div class="grp"><label>يوم معيّن</label><input type="date" class="input input-sm" id="bdDay" onchange="renderBarberDetails()"><button class="btn btn-xs" onclick="$('bdDay').value='';renderBarberDetails()">كل الشهر</button></div><span class="sub" id="bdSum"></span></div>
+    <div class="table-wrap" style="max-height:55vh;overflow-y:auto"><table class="table"><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>العميل</th><th>الخدمات</th><th>الإجمالي</th></tr></thead><tbody id="bdBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- APPOINTMENT -->
+<div class="modal-overlay" id="apptModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('apptModal')">✕</button>
+    <h2 id="apModalTitle">حجز موعد</h2>
+    <input type="hidden" id="apId">
+    <div class="field"><label class="label">العميل * (اكتب واختار من القائمة)</label><input class="input" id="apCust" list="custList" autocomplete="off" placeholder="اسم العميل أو رقمه..."></div>
+    <div class="row2">
+      <div class="field"><label class="label">الحلاق</label><select class="input" id="apBarber"></select></div>
+      <div class="field"><label class="label">الخدمة *</label><select class="input" id="apSvc"></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label class="label">التاريخ *</label><input class="input" type="date" id="apDate"></div>
+      <div class="field"><label class="label">الوقت *</label><input class="input" type="time" id="apTime"></div>
+    </div>
+    <div class="field"><label class="label">ملاحظات</label><input class="input" id="apNotes"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('apptModal')">إلغاء</button><button class="btn btn-primary" id="apSave" onclick="saveAppt()">💾 حفظ الموعد</button></div>
+  </div>
+</div>
+
+<!-- INVOICE EDIT -->
+<div class="modal-overlay" id="invModal">
+  <div class="modal wide">
+    <button class="modal-close" onclick="closeModal('invModal')">✕</button>
+    <h2 id="ieTitle">✏️ تعديل الفاتورة</h2>
+    <div class="row2">
+      <div class="field"><label class="label">العميل (فاضي = عميل نقدي)</label><input class="input" id="ieCust" list="custList" autocomplete="off"></div>
+      <div class="field"><label class="label">الحلاق</label><select class="input" id="ieBarber"></select></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label class="label">التاريخ</label><input class="input" type="date" id="ieDate"></div>
+      <div class="field"><label class="label">خصم (ج)</label><input class="input" type="number" min="0" step="any" id="ieDisc" oninput="calcIE()"></div>
+      <div class="field"><label class="label">طريقة الدفع</label><select class="input" id="iePay"><option value="cash">كاش</option><option value="vodafone">فودافون كاش</option><option value="instapay">إنستاباي</option><option value="card">فيزا</option></select></div>
+    </div>
+    <div class="field"><label class="label">الخدمات — اضغط للاختيار / الإلغاء</label><div class="svc-chips" id="ieSvcs"></div></div>
+    <div class="field"><label class="label">ملاحظات</label><input class="input" id="ieNotes"></div>
+    <div class="total-box"><span class="muted">الإجمالي</span><b id="ieTotal">0 ج</b></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('invModal')">إلغاء</button><button class="btn btn-primary" id="ieSave" onclick="saveInvEdit()">💾 حفظ التعديل</button></div>
+  </div>
+</div>
+
+<!-- EXPENSE -->
+<div class="modal-overlay" id="expModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('expModal')">✕</button>
+    <h2 id="exModalTitle">إضافة مصروف</h2>
+    <input type="hidden" id="exId">
+    <div class="row2">
+      <div class="field"><label class="label">البند</label><select class="input" id="exCat"></select></div>
+      <div class="field"><label class="label">المبلغ (ج) *</label><input class="input" type="number" min="0" step="any" id="exAmount"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label class="label">التاريخ</label><input class="input" type="date" id="exDate"></div>
+      <div class="field"><label class="label">ملاحظة</label><input class="input" id="exNote"></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('expModal')">إلغاء</button><button class="btn btn-primary" id="exSave" onclick="saveExpense()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- STAFF -->
+<div class="modal-overlay" id="staffModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('staffModal')">✕</button>
+    <h2>➕ إضافة مستخدم</h2>
+    <div class="field"><label class="label">الاسم *</label><input class="input" id="sfName"></div>
+    <div class="field"><label class="label">الإيميل * (هيستخدمه في الدخول)</label><input class="input" type="email" id="sfEmail" style="direction:ltr;text-align:left"></div>
+    <div class="row2">
+      <div class="field"><label class="label">الباسورد * (٦ حروف على الأقل)</label><input class="input" type="text" id="sfPass" style="direction:ltr"></div>
+      <div class="field"><label class="label">الصلاحية</label><select class="input" id="sfRole"><option value="cashier">كاشير</option><option value="owner">مالك (صلاحية كاملة)</option></select></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('staffModal')">إلغاء</button><button class="btn btn-primary" id="sfSave" onclick="saveStaff()">💾 إنشاء الحساب</button></div>
+  </div>
+</div>
+
+<!-- RECEIPT -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    <h2>🧾 الوصل</h2>
+    <div class="receipt-paper" id="receiptBody"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('receiptModal')">إغلاق</button><button class="btn btn-primary" onclick="printCurrent()">🖨️ طباعة</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/dashboard.js"></script>
+</body>
+</html>
