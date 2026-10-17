@@ -1005,9 +1005,12 @@ requireAuth(['owner'], me => {
   fs.collection('settings').doc('shop').onSnapshot(s => { D.shop = { ...DEFAULT_SHOP, ...(s.data() || {}) }; applyShop(); scheduleRender(); }, onErr);
   fs.collection('meta').doc('migration').onSnapshot(s => {
     D.migration = s.exists ? s.data() : null;
-    if (!s.exists && !s.metadata.fromCache) checkMigration();
     renderMigStatus();
   }, onErr);
+  // نسأل السيرفر مباشرة (مش الكاش) هل الترحيل اتعمل ولا لأ
+  fs.collection('meta').doc('migration').get({ source: 'server' })
+    .then(s => { if (!s.exists) checkMigration(); })
+    .catch(e => { onErr(e); });
 
   $('bmMonth').value = TODAY.slice(0, 7);
   $('exMonth').value = TODAY.slice(0, 7);
